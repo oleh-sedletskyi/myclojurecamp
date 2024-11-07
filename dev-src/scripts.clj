@@ -62,3 +62,17 @@
                                                     (or l #{}))))))
        (map mycc.common.db/save-user!)
        doall)
+
+;; migrate from topic-ids to topics
+;; #{1 2} => {1 :level/beginner 2 :level/expert}
+#_(->> (mycc.common.db/get-users)
+       (map (fn [{:user/keys [topic-ids role] :as u}]
+              (let [role (or role :role/student)
+                    level (if (= :role/student role)
+                            :level/beginner
+                            :level/expert)]
+                (-> u
+                    (assoc :user/topics (zipmap topic-ids (repeat level)))
+                    (dissoc :user/topic-ids)))))
+       (map mycc.common.db/save-user!)
+       doall)
